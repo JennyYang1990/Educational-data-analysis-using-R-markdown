@@ -1,0 +1,109 @@
+---
+title: "final_project_junhe_yang"
+output: html_document
+---
+
+# 1. Driving questions
+
+- Q1: How many percentages of the students that have a score of more than 90 in each assessment?
+- Q2: Which region has the highest final passed rate and which region has the lowest final passed rate?
+- Q3: What is the failure rate for each module?
+
+# 2. Description of data
+
+```{r message=FALSE}
+library(tidyverse)
+```
+## load studentAssessment.csv file
+
+```{r}
+assessment <- read.csv("studentAssessment.csv")
+glimpse(assessment)
+```
+- id_assessment – the identification number of the assessment.
+- id_student – a unique identification number for the student.
+- date_submitted – the date of student submission, measured as the number of days since the start of the module presentation.
+- is_banked – a status flag indicating that the assessment result has been transferred from a previous presentation.
+- score – the student’s score in this assessment.
+
+## load studentInfo.csv
+
+```{r}
+studentInfo <- read.csv("studentInfo.csv")
+glimpse(studentInfo)
+```
+- code_module – an identification code for a module on which the student is registered.
+- code_presentation - the identification code of the presentation during which the student is registered on the module.
+- id_student – a unique identification number for the student.
+- gender – the student’s gender.
+- region – identifies the geographic region, where the student lived while taking the module-presentation.
+- highest_education – highest student education level on entry to the module presentation.
+- imd_band – specifies the Index of Multiple Depravation band of the place where the student lived during the module-presentation.
+- age_band – band of the student’s age.
+- num_of_prev_attempts – the number times the student has attempted this module.
+- studied_credits – the total number of credits for the modules the student is currently studying.
+- disability – indicates whether the student has declared a disability.
+- final_result – student’s final result in the module-presentation.
+
+
+# 3. Exploratory Data Analysis (EDA)
+
+## Find the percentages of students in each assessment that has a score of more than 90.
+
+```{r}
+assessment %>%
+  group_by(id_assessment)%>%
+  summarise(total=n(), num_of_student_more_than_90_score=sum(score>=90, na.rm = TRUE))%>%
+  mutate(ratio=num_of_student_more_than_90_score/total)%>%
+  arrange(desc(ratio))
+```
+
+## Creating a scatter plot of the total number of students vs. the number of students that pass the final in each region.
+
+```{r}
+studentInfo %>%
+  group_by(region)%>%
+  summarise(total_number=n(), pass_count=sum(final_result=="Pass"))%>%
+  ggplot(aes(total_number,pass_count))+
+  geom_point(aes(total_number, pass_count, color=region)) + 
+  geom_smooth(method = "lm") +
+  xlab("total_number")+
+  ylab("pass_count")
+  
+```
+```{r}
+ggsave("pass_region.png",
+       height = 5,
+       width = 1.61*5, 
+       dpi = 300, 
+       unit = "in", 
+       device = "png")
+```
+
+## Finding the fail rate of each module.
+
+```{r}
+studentInfo %>%
+  group_by(code_module)%>%
+  summarise(total_cnt=n(), fail_cnt=sum(final_result=="Fail"))%>%
+  mutate(fail_rate=fail_cnt/total_cnt)%>%
+  ggplot(aes(fail_rate, fct_reorder(code_module, fail_rate))) + geom_col() +
+  xlab("failure_rate") +
+  ylab("code_module")
+```
+```{r}
+ggsave("failure_rate.png",
+       height = 5,
+       width = 1.61*5, 
+       dpi = 300, 
+       unit = "in", 
+       device = "png")
+```
+
+# 4. Discussion and conclusion
+
+The result of Q1 shows that assessment 14991 has the highest percentage of students who have a score of more than 90. It means that the most significant number of students (n=904)achieved a score of more than 90 on the assessment 14991. However, the lowest number of students got a more than 90 score in the assessment 1758. Only three students in total 337 got over 90 points in this assessment.
+
+The result of Q2 is to compare the total number of students vs. the number of students that pass the final in 13 different regions. In the plot, the blue line shows the average passing rate among all regions. It also shows that the south region has the highest final passed rate. However, the north region has the lowest final passed rate among these 13 regions. The other 11 regions are very nearby the average passing rate.Future study can find the reason why the south region's students have the high passing rate. We can analyze the teaching evaluation score, the number of times the students communication with the materials in one day, or the assessment's difficulty sore to find this reason.
+
+The last plot is to answer Q3. It demonstrates that the failure rates for each module. Module GGG has the highest failure rate among the total 7 modules. It means in these modules, students are easier to fail this module. The DDD,BBB,FFF modules have a similar failure rate. However, The failed rate of AAA module is the lowest. In other words, students are easier to pass this module compared with others. Future study can analyze the failure rates for each module by gender. It could get different results for this problem.

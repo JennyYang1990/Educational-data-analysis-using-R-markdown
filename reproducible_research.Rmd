@@ -1,0 +1,79 @@
+---
+title: 'Assignment 1: Reproducible Research'
+output:
+  html_document:
+    df_print: paged
+---
+
+## Objective
+
+To practice how to conduct reproducible research using R Markdown
+
+## What to do
+
+1. Rename this Rmd file as `assignment1_yourfirstname_lastname.Rmd` (e.g., `assignment1_youngjin_lee.Rmd`).
+2. Read the provided explanations and fill up the blank code chunks.
+3. After completing the task, (1) make sure to remove **all intermediate** code chunks you used during the problem solving processes; and (2) create an HTML report.
+  - If you don't remove intermediate code chunks, you will lose some points.
+  - If your Rmd file fail to produce an HTML report, you will get **zero** point. 
+4. Submit your Rmd file (\*.Rmd) and HTML report file (\*.html) to Canvas.
+
+## Load ggplot2 package
+
+```{r}
+library(ggplot2)
+```
+
+## Create two numeric vectors (1 point)
+
+- `x`: Hold integer values from -30 to 30 (i.e., -30, -29, -28, ..., 0, 1, ..., 29, 30)
+- `y`: Hold $x^4$ values 
+
+```{r}
+  x <- -30:30
+  y <- x^4
+```
+
+
+```{r}
+x
+```
+
+```{r}
+y
+```
+
+## Create a scatter plot showing (x, y) values (1 point)
+
+- Use a `ggplot2` function explained in the book to create a scatter plot
+
+```{r}
+qplot(x,y)
+```
+
+## Create a function that creates a scatter plot, given a vector of numbers and the power value (2 point)
+
+- Function name: `create_plot`
+- Function argument 1: `x`, a numeric vector of any length
+- Function argument 2: `n`, an exponent (or power) that will be used to create another vector by raising `x` to the power of `n`
+
+```{r}
+create_plot <- function (x, n) {
+  y <- x^n
+  qplot(x, y)
+}
+```
+
+## Test `create_plot` function (1 point)
+
+```{r}
+create_plot(x, 2)
+```
+
+```{r}
+create_plot(x, 3)
+```
+
+```{r}
+create_plot(-40:30, 5)
+```

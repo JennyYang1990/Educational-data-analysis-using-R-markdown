@@ -1,0 +1,135 @@
+---
+title: "Assignment 5: Data Transform, Tidying and Munging"
+output: html_notebook
+---
+
+1. Save this Rmd file as 'assignment5_yourfirstname_yourlastname.Rmd` (e.g., assignment5_youngjin_lee.Rmd).
+  - Make sure to remove all testing code chunks.
+  - Make sure to test reproducibility of your Rmd file.
+2. Submit your Rmd file to Canvas. 
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+
+### Load scorecard.csv file
+
+- Create a tibble named `scorecard` from the `scorecard.csv` file
+  - `scorecard.csv` is available in Canvas
+- Review [scorecard documentation](https://rdrr.io/github/uc-cfss/rcfss/man/scorecard.html) to learn about the data set
+
+```{r}
+scorecard <- read.csv("scorecard.csv")
+head(scorecard)
+```
+
+### 1. Find TX institutions that has more than 50% of first-generation students (1 point)
+
+- Order institutions by first-generation student percentage
+- Select top ten TX institutions that has more than 50% of first-generation students
+  - If there is a tie, you will get more than 10 institutions. 
+- Show the content of a tibble with institution name and first generation fraction columns
+
+```{r}
+scorecard %>%
+  arrange(desc(firstgen))%>%
+  filter(state=="TX" , firstgen > 0.5)%>%
+  select(name, firstgen, num_range("firstgen", 1:10))
+```
+
+### 2. Find the number of instituions that has more than 50% of first-generation students in each state, and show state name and number of institutions institutions in the descening order of the number of such institutions (1 point)
+
+- Show the content of tibble with two columns, state name and number of institutions satisfying the given condition (more than 50% of first-generation students)
+
+```{r}
+scorecard %>%
+  arrange(desc(firstgen))%>%
+  filter(firstgen > 0.5)%>%
+  count(state)%>%
+  arrange(desc(n))
+```
+
+### 3. Create a data frame with the 20 most expensive colleges (1 point)
+
+- Show the content of a tibble with rows satisfying conditions
+- Order the result in the decreasing order of cost
+
+```{r}
+scorecard %>%
+  arrange(desc(cost))%>%
+  slice(1:20)
+```
+
+### 4. Find the median value of the cost of attendance of public colleges in each state that has more than 50% of first generation student (2 points)
+
+- Rearrange the resulting data frame in the decreasing order of median annual cost of attendance.
+- Show the content of a tibble with two columns, state name, median cost of colleges meeting the condition
+
+```{r}
+scorecard %>%
+  filter(firstgen > 0.5 , type == "Public")%>%
+  group_by(state)%>%
+  summarise(state, median_cost=median(cost))%>%
+  arrange(desc(median_cost))%>%
+  distinct()
+```
+
+### 5. Create a data frame showing the average admission rate, the average SAT score and the average cost of attendance of top 5 institutions of each type (2 points)
+
+- For each institution category (Public; Private, nonprofit; Private, for-profit), you need to identify five institutions with highest average SAT scores.
+- Then, compute the average admission rate, SAT score and cost of attendance of those five institutions in the institution category
+
+
+```{r}
+scorecard %>%
+  group_by(type)%>%
+  arrange(desc(satavg))%>%
+  slice(1:5)%>%
+  group_by(type)%>%
+  summarise(type, avg_admrate=mean(admrate), avg_satavg=mean(satavg), avg_cost=mean(cost))%>%
+  distinct()
+```
+
+### 6. Create a scatter plot of avg. cost of attendance vs. avg. debt of college students in each state (3 points)
+
+- Use different colors for each state 
+- Show one linear regression line for data points. 
+- Use `Average Cost of Attendance` for X axis label
+- Use `Average Debt When Graduating` for Y axis label
+
+```{r}
+scorecard %>%
+  group_by(state)%>%
+  summarise(avg_cost=mean(cost, na.rm=TRUE), avg_debt=mean(debt, na.rm=TRUE))%>%
+  ggplot(aes(avg_cost,avg_debt))+
+  geom_point(aes(avg_cost, avg_debt, color=state)) + 
+  geom_smooth(method = "lm") +
+  xlab("Average Cost of Attendance")+
+  ylab("Average Debt When Graduating")
+  
+```
+
+### 7. Using `race` data set, creates a line graph showing temporal changes of student scores (3 points). 
+
+- X axis is Time
+- Y axis is Score
+- Use different colors and shapes for each student.
+
+### Load the `race.csv` file to create a tibble named `race`
+
+```{r}
+race <- read.csv("race.csv")
+race%>%
+  pivot_longer(X50:X350,
+               names_to = "Time_str",
+               values_to = "Score")%>%
+  mutate(Time=as.numeric(substr(Time_str, 2, nchar(Time_str))))%>%
+  group_by(Time)%>%
+  ggplot(aes(Time, Score, color=Name, shape=Name))+
+  geom_point()+
+  geom_line()+
+  xlab("Time")+
+  ylab(("Score"))
+```
+

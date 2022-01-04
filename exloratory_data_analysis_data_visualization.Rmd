@@ -1,0 +1,129 @@
+---
+title: 'Assignment 3: Exloratory Data Analysis & Data Visualization'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+1. Save this Rmd file as 'assignment3_yourfirstname_yourlastname.Rmd` (e.g., assignment3_youngjin_lee.Rmd).
+2. Provide R codes that will create a data frame or generate each ggplot outcomes shown in the `assignment3_expected_results.html` file.
+3. Submit your Rmd file and rendered HTML report file to Canvas. 
+  - Make sure to submit a **clean** Rmd file that do not include any testing R code chunk.
+  - Make sure to test the **reproducibility** of your Rmd file before submission, which can be done (1) restart RStudio, (2) load your Rmd file into RStudio, and (3) execute each R code chunk one by one. 
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+### 1. Create a data frame from a CSV file (1 point)
+
+- Use the `mpg.csv` file to create a data frame that will be used in the subsequent tasks.
+- Create a data frame (or tibble) named `df` from the `mpg.csv` file.
+
+```{r}
+  mympg <- read.csv("C:\\Users\\junhe\\Desktop\\Documents\\2021Fall semester\\LTEC6514_2021Fall\\LTEC6514_2021Fall\\mpg.csv")
+  df <- data.frame(mympg)
+```
+
+```{r}
+head(df)
+```
+
+- `manufacturer`: Car manufacturer
+- `model`: Model name
+- `displ`: Engine displacement in liters
+- `year`: Year of manufacturing
+- `cyl`: Number of cylinders
+- `trans`: Type of transmission
+- `drv`: Drive type
+- `cty`: City mileage
+- `hwy`: Highway mileage
+- `fl`: Fuel type
+- `class`: Vehicle class
+
+### 2. Create a histogram of your data set (2 points)
+
+- You need to find an appropriate ggplot2 function that will create a histogram of highway mileage.
+  - Use the data frame (or tibble) you created in the previous step, 
+  - You can use R help on ggplot2 or [ggplot2 cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf) to find an appropriate ggplot2 function for this task
+- Use `gray60` for `color` and `cornsilk` for `fill` aesthetics of the histogram.
+- Use `Highway Mileage` for X axis label, and `Count`for Y axis label.
+
+```{r}
+ggplot(data=df, mapping = aes(hwy))+
+  geom_histogram (color= "gray60", fill="cornsilk")
+  
+```
+
+### 3. Create separate histograms of vehicle's city mileage for each vehicle class (2 points)
+
+- You need to find an appropriate ggplot2 function that will create a histogram.
+- Use `City Mileage` and `Count` for X and Y axis label
+- Use `gray60` for `color` and `cornsilk` for `fill` aesthetics of the histogram.
+
+```{r}
+ggplot(df, aes(cty))+
+  geom_histogram (color= "gray60", fill="cornsilk")+
+  facet_wrap(~ class, nrow = 3)
+```
+
+### 4. Compare distributions of city mileage of vehivles by vehicle class (2 points)
+
+- Use box plots to compare distributions 
+- Use `City Mileage` for X axis label and `Vehicle Class` for Y label
+
+```{r}
+ggplot(data = df, 
+       mapping = aes(x = cty, y = class)) + 
+  geom_boxplot()+
+  xlab("City Mileage")+
+  ylab("Vehicle Class")
+```
+
+### 5. Create a scatter plot showing the relationship between city mileage and highway mileage (3 points)
+
+- Use `City Mileage` and `Highway Mileage` for X and Y axis labels
+- Show a straight (regression) line between city mileage and highway mileage
+- Avoid overplotting
+
+```{r}
+ggplot(df, aes(cty, hwy)) + 
+  geom_point(mapping = aes(cty, hwy),position = "jitter")+
+  geom_smooth(method = "lm")+
+  xlab("City Mileage")+
+  ylab("Highway Mileage")
+```
+
+### 6. Examine whether this relationship (city mileage vs. highway mileage) is different by vehicle class (3 points)
+
+- Use `City Mileage` and `Highway Mileage` for X and Y axis labels
+- Use `color` aesthetics to reveal the difference
+- Show one regression line between city mileage and highway mileage
+- Avoid overplotting
+
+```{r}
+ggplot(df, aes(cty, hwy)) + 
+  geom_point(mapping = aes(cty, hwy, color=class),position = "jitter")+
+  geom_smooth( method = "lm")+
+  xlab("City Mileage")+
+  ylab("Highway Mileage")
+```
+
+### 7. Create separate regerssion plots (city mileage vs. highway mileage) for each vehicle class (3 points)
+
+- Use `City Mileage` and `Highway Mileage` for X and Y axis labels
+- Show a straight (regression) line for each vehicle class
+- Use `size = 1` and `alpha = 0.5` when plotting points
+  - Read R documentations to find out what `size = 1` and `alpha = 0.5` mean
+
+```{r}
+ggplot(df, aes(cty, hwy, color = "class")) +
+  geom_point(mapping = aes(cty, hwy, color=class),size =1, alpha = 0.5, position = "jitter") +
+  facet_wrap(~ class, nrow = 3)+
+  geom_smooth( method = "lm") +
+  xlab("City Mileage")+
+  ylab("Highway Mileage")
+  
+```
+

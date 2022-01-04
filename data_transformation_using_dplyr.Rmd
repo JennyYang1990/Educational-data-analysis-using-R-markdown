@@ -1,0 +1,113 @@
+---
+title: "Assignment 4: Data transformation using dplyr"
+output: html_notebook
+---
+
+1. Save this Rmd file as 'assignment4_yourfirstname_yourlastname.Rmd` (e.g., assignment4_youngjin_lee.Rmd).
+2. Provide R codes that will create a data frame or generate each ggplot outcomes shown in the `assignment4_expected_results.html` file.
+3. Submit your Rmd file and rendered HTML report file to Canvas. 
+  - Make sure to submit a **clean** Rmd file that do not include any testing R code chunk.
+  - Make sure to test the **reproducibility** of your Rmd file before submission, which can be done (1) restart RStudio, (2) load your Rmd file into RStudio, and (3) execute each R code chunk one by one. 
+
+```{r}
+library(tidyverse)
+```
+
+### 1. Create a tibble from babyNames.csv (1 point)
+
+```{r}
+baby_names <- read_csv("babyNames.csv")
+```
+
+Examine`baby_names` to find out column names, column types and first several values in the column. 
+
+```{r}
+glimpse(baby_names)
+
+```
+
+### 2. Examine popularity of your name (1 point)
+
+- If you don't have an English name, choose an English name you like.
+- Arrange baby names in the descending order of the popularity (`Count`).
+
+```{r}
+baby_names %>% 
+  filter(Name == "Jenny")%>%
+  arrange(desc(Count))
+```
+
+### 3. Find the most popular name when you were born (1 point)
+
+- If you are male (female), only examine boy's (girl's) names.
+
+```{r}
+baby_names %>%
+  filter(Sex == "Girls" & Year == "1990") %>%
+  top_n(1,Count)
+```
+
+### 4. Use ggplot2 to find peak popularity of your name (1 point)
+
+- A line plot showing popularity of Michael (Boy) vs. year
+
+```{r}
+baby_names %>%
+  group_by(Name) %>%
+  filter(Name == "Jenny" & Sex == "Girls") %>%
+  ggplot(aes(Year, Count))+
+  geom_point() + geom_line() +
+  xlab("Year") + 
+  ylab("Count")
+```
+
+### 5. Find the year in which your name was most popular (2 point)
+
+```{r}
+baby_names %>% 
+  filter(Name == "Jenny" & Sex =="Girls") %>%
+  arrange(desc(Count))%>%
+  top_n(1,Count)
+```
+
+### 6. Create a plot showing the most popular baby name (boys and girls) by proportion over the years (3 points)
+
+Instead of using `Count`, use **proportion** as a measure of popularity. 
+
+- Each year, find the most popular baby names for boys and girls; and compute the proportion of those names (relative to all baby names in that particular year); and repeat this process for all years in the data set.
+  - Most popular name can change year by year. 
+
+
+```{r}
+# find the most popular baby names for boys and girls and compute the proportion of those names for all years in the data set. 
+# In this code, I do it separately for boys and girls.
+boy_stat<-
+baby_names %>% 
+  filter(Sex=="Boys")%>%
+  group_by(Year, Sex)%>%
+  summarize(Name, Sex, Count, Year, Prop=Count/sum(Count))%>%
+  arrange(desc(Prop))%>%
+  top_n(1,Prop)%>%
+  arrange(desc(Year))
+
+girl_stat<-
+baby_names %>% 
+  filter(Sex=="Girls")%>%
+  group_by(Year, Sex)%>%
+  summarize(Name, Sex, Count, Year, Prop=Count/sum(Count))%>%
+  arrange(desc(Prop))%>%
+  top_n(1,Prop)%>%
+  arrange(desc(Year))
+
+# Then, I merge boys and girls into one data frame.
+baby_stat <- merge(boy_stat, girl_stat, by='Year')
+
+# Create a plot showing the most popular baby name (boys and girls) by proportion over the years
+ggplot(baby_stat, aes(x=Year))+
+  geom_line(aes(y=Prop.x, color='Boys')) + geom_point(aes(y=Prop.x, color='Boys')) +
+  geom_line(aes(y=Prop.y, color='Girls')) + geom_point(aes(y=Prop.y, color='Girls')) +
+  scale_color_manual(name = "Sex", values = c("Boys" = "tomato", "Girls" = "skyblue")) +
+  xlab("Year") + 
+  ylab("Propotion")
+```
+

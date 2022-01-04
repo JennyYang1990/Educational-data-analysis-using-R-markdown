@@ -1,0 +1,130 @@
+---
+title: "Assignment 2: R Basics"
+output: html_notebook
+---
+
+## What to do
+
+1. Rename this Rmd file as `assignment2_yourfirstname_lastname.Rmd` (e.g., `assignment2_youngjin_lee.Rmd`).
+2. Clean your R session by doing `Session > Restart R` in RStudio. 
+3. Download a data file, `CA_school.csv` from Canvas.
+4. Read the provided explanations and fill up the blank code chunks.
+5. After completing the task, (1) make sure to remove **all intermediate** code chunks you used during the problem solving processes; and (2) create an HTML report.
+    - If you don't remove intermediate code chunks, you will lose some points.
+    - If your Rmd file fail to produce an HTML report, you will get **zero** point. 
+6. Submit your Rmd file (\*.Rmd) and HTML report file (\*.html) to Canvas.
+
+## Load a data file (1 point)
+
+- Create a data frame named `data` from the `CA_school.csv' file.
+
+```{r}
+df <- read.csv("CA_school.csv")
+```
+
+## Examine the loaded data set
+
+- Use `str()` function
+
+```{r}
+str(df)
+```
+
+- See https://vincentarelbundock.github.io/Rdatasets/doc/Ecdat/Caschool.html for more information about this data set
+
+## Select the first 20 rows and `computer`, `str` and `avginc` columns (1 point)
+
+- Save the selected rows and columns in a new object named `subset1`.
+
+```{r}
+subset1 <- df [1:20,c("computer","str","avginc")]
+```
+
+- Show the content of `subset1`
+
+```{r}
+subset1
+```
+
+## Compute the mean of average reading score column (`readscr`) in the original data set (`data`) (1 point)
+
+- Save the computed mean value in the `avg_reading_score` object 
+
+```{r}
+avg_reading_score <- mean(df[,'readscr'])
+```
+
+- Show the value of `avg_reading_score`
+
+```{r}
+avg_reading_score
+```
+
+## Compute the mean of average math score column (`mathscr`) in the original data set (`data`) (1 point)
+
+- Save the computed mean value in the `avg_math_score` object
+
+```{r}
+avg_math_score <- mean(df[, 'mathscr'])
+```
+
+- Show the value of `avg_math_score`
+
+```{r}
+avg_math_score
+```
+
+## Select rows with average reading score < `avg_reading_score` AND average math score >= `avg_math_score` (2 points)
+
+- Save selected the rows in a new data frame named `subset2`
+
+```{r}
+vec_rd <- df['readscr'] < avg_reading_score
+vec_math <- df['mathscr'] >= avg_math_score
+vec <- vec_rd & vec_math
+subset2 <- df[vec,]
+```
+
+- Show the content of `subset2`
+
+```{r}
+subset2
+```
+## Select rows with average reading score < `avg_reading_score` OR average math score >= `avg_math_score` (2 points)
+
+- Save selected the rows in a new data frame named `subset3`
+
+```{r}
+vec_rd <- df['readscr'] < avg_reading_score
+vec_math <- df['mathscr'] >= avg_math_score
+vec_1 <- vec_rd | vec_math
+subset3 <- df[vec_1,]
+```
+
+- Show the content of `subset3`
+
+```{r}
+subset3
+```
+
+## Identify school districts in "Los Angeles" or "Sonoma" or "San Diego" counties whose average reading score is higher than average math score (2 points)
+
+```{r}
+vec_la <- df ['county'] == "Los Angeles" 
+vec_so <- df ['county'] == "Sonoma"
+vec_sd <- df ['county'] == "San Diego"
+vec_2 <- vec_la | vec_so | vec_sd
+vec_3 <- df['readscr'] > df['mathscr']
+vec_4 <- vec_2 & vec_3
+selected <- df[vec_4,]
+selected
+```
+
+## Save county name, district name, average reading score and average math score satisfying the condtions in the previous task, school districts in "Los Angeles" or "Sonoma" or "San Diego" counties whose average reading score is higher than average math score (1 point)
+
+- Create a file named as `district_reading_math_scores.csv` (1 point)
+
+```{r}
+write.csv(selected[, c("county", "district", "readscr", "mathscr")], file = "district_reading_math_scores.csv")
+```
+

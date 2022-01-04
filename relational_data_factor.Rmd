@@ -1,0 +1,163 @@
+---
+title: "Assignment 6: Relational Data & Factor"
+output: html_notebook
+---
+
+1. Save this Rmd file as 'assignment6_yourfirstname_yourlastname.Rmd` (e.g., assignment6_youngjin_lee.Rmd).
+  - Make sure to remove all testing code chunks.
+  - Make sure to test reproducibility of your Rmd file.
+2. Submit your Rmd file and the rendered HTML file to Canvas. 
+
+### See lecture slides for the expected results.
+
+Using the `nycflights113` package and the `flights` and `planes` tables to answer the following questions.
+
+```{r}
+library(nycflights13)
+library(tidyverse)
+
+# Look up the package documentation about flights table
+names(flights)
+names(planes)
+```
+
+# Task 1. 
+
+How many planes have missing date of manufacturer? (1 point)
+
+```{r}
+planes %>% 
+  summarize(sum(is.na(year) == TRUE))
+```
+
+# Task 2: 
+
+Using tables in the `Lahman` package, name every player in baseball history who has accumulated at least 300 home runs (HR) and at least 300 stolen bases (SB). Show the result in the describing number of home runs. (2 points)
+
+- If you have **not** installed the `Lagman` package, install it before running `library(Lahman)`.
+- You can install the `Lahman` package in RStudio / Packages / Install pane.
+    - While installing a package, pay attention to the Console. 
+- See R documentations for [Lahman package](https://www.rdocumentation.org/packages/Lahman/versions/8.0-0)
+
+```{r}
+library(Lahman)
+?Lahman
+Batting %>%
+  group_by(playerID) %>%
+  summarise(total_HR = sum(HR), total_SB = sum(SB)) %>%
+  filter(total_HR >= 300, total_SB >= 300) %>%
+  left_join(People, by = c("playerID" = "playerID")) %>%
+  select(nameFirst, nameLast, total_HR, total_SB)
+```
+
+# Task 3
+
+Name every pitcher in baseball history who has accumulated least 20 wins (W) an at least 300 strikeouts (SO) in one season. 
+Create a tibble showing the player name in the format of firstname_lastname, and number of times the player achieve this feat in the descending order of that number. (3 points) 
+
+```{r}
+Pitching %>%
+  group_by(playerID, yearID) %>%
+  summarise(total_W = sum(W), total_SO = sum(SO)) %>%
+  filter(total_W >= 20 , total_SO >= 300)%>%
+  left_join(Master, by = c("playerID" = "playerID"))%>%
+  unite(name, nameFirst, nameLast, sep = "_")%>%
+  mutate(name=c(name), n=n())%>%
+  arrange(desc(n))%>%
+  select(playerID,name,n)%>%
+  distinct()
+```
+
+# Task 4 (3 points)
+
+Load a data file, `assignment6_data.csv`, for the task and save it in `df_task4`
+
+```{r}
+df_task4 <- read.csv("assignment6_data.csv")
+```
+
+`df_task4` contains the feedback of students about a MOOC they took. 
+
+```{r}
+head(df_task4)
+```
+
+`tidytext` package contains `stop_words`, a tibble containing various lexicons for English stop words. 
+
+  - **Stop words** are a set of commonly used words in language (e.g., the, is, and, etc.). In natual language processing and text mining, stop words are used to eliminate unimportant words, allowing applications to focus on important words instead.
+  
+- If you have **not** installed the `tidytext` package, install it before running `library(tidytext)`.
+- You can install the `tidytext` package in RStudio / Packages / Install pane.
+    - While installing a package, pay attention to the Console. 
+
+```{r}
+library(tidytext)
+head(stop_words)
+```
+
+Using the data, `df_task4`, and the stop word lexicon, `stop_words`, create a bar plot showing top 15 most frequent words in the student's review. 
+
+- Remove stop words from the student feedback.
+- Use `geom_col()`. See R's help on `geom_col()` to figure out how to use this function.
+- Order words in the decreasing number of frequency
+- Use "Count" and "Unique Words" for axis labels
+
+```{r}
+new_df <- df_task4 %>%
+  anti_join(stop_words)
+
+frequency_dataframe = new_df %>% 
+  count(word) %>%
+  arrange(desc(n))
+
+short_dataframe = head(frequency_dataframe, 15)
+
+short_dataframe %>%
+  ggplot(aes(n, fct_reorder(word, n))) + geom_col() +
+  xlab("Count") +
+  ylab("Unique Words")
+```
+
+# Task 5 (4 points)
+
+```{r}
+afinn_sentiment <- get_sentiments("afinn")
+```
+
+afinn sentiment table provides numerical values for words. A positive (negative) word gets a positive (negative) value as shown below.
+
+```{r}
+head(afinn_sentiment)
+```
+
+Using `afinn` sentiment table, and `df_task4` tibble, compute the sentiment scores of the word in the student's review. 
+
+For example, `df_task4` tibble indicates that `user_1`'s review includes the following 142 words:
+
+```{r}
+df_task4 %>% 
+  filter(user_id == "user_1")
+```
+
+You can compute the sentiment score of `user_1` by adding sentiment scores of each word in the word column. 
+By repeating these processes for each student, you can compute the sentiment scores of students in the `df_task4`. To achieve this goal, you need to use appropriate `dplyr` verbs, and `join` functions learned in class. You need to create a tibble with two columnns (`user_id`, `sentiment`), and save it to a new variable, `sentiment_df`. 
+
+```{r}
+sentiment_df <- df_task4 %>%
+  inner_join(get_sentiments("afinn"))%>%
+  group_by(user_id)%>%
+  summarise(sentiment=sum(value))
+```
+
+Finally, create a histogram of sentiment scores of all students using `sendtiment_df`. 
+
+- Use color = "red", fill = "#FF6666", alpha = 0.5
+- Use "Sentiment Score" and "Count" for X and Y axis lables.
+
+```{r}
+ggplot(sentiment_df, aes(x=sentiment, fill=user_id))+
+  geom_histogram(color="red", fill = "#FF6666", alpha = 0.5)+
+  xlab("Sentiment Score")+
+  ylab("Count")
+```
+
